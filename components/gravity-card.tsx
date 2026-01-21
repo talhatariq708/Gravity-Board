@@ -11,6 +11,9 @@ interface GravityCardProps {
   glow: 'pink' | 'blue' | 'purple'
   onDelete: (id: string) => void
   isZeroGravity: boolean
+  physicsPosition?: { x: number; y: number; rotation: number }
+  isDeleting?: boolean
+  isDragging?: boolean
   children?: ReactNode
 }
 
@@ -21,6 +24,9 @@ export function GravityCard({
   glow,
   onDelete,
   isZeroGravity,
+  physicsPosition,
+  isDeleting = false,
+  isDragging = false,
   children,
 }: GravityCardProps) {
   const glowClasses = {
@@ -31,34 +37,45 @@ export function GravityCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -50, scale: 0.8 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0, filter: 'blur(10px)' }}
-      transition={{
-        default: {
-          type: 'spring',
-          stiffness: 400,
-          damping: 30,
-          duration: 0.6,
-        },
-        exit: {
-          duration: 1,
-          ease: 'easeInOut',
-        },
-      }}
+      initial={{ opacity: 0, scale: 0.6, y: -40 }}
+      animate={
+        isDeleting
+          ? { opacity: 0, scale: 0, filter: 'blur(12px)' }
+          : physicsPosition
+            ? {
+                opacity: isDragging ? 0.95 : 1,
+                y: physicsPosition.y - 90,
+                x: physicsPosition.x - 144,
+                rotate: physicsPosition.rotation * (180 / Math.PI),
+                scale: isDragging ? 1.05 : 1,
+              }
+            : { opacity: 1, y: 0, scale: 1 }
+      }
+      exit={{ opacity: 0, scale: 0, filter: 'blur(12px)' }}
+      transition={
+        isDeleting
+          ? { duration: 0.8, ease: 'easeOut' }
+          : {
+              default: {
+                type: 'spring',
+                stiffness: 350,
+                damping: 25,
+                mass: 1,
+              },
+            }
+      }
       className={`
         glassmorphic
         rounded-xl
         p-6
         w-72
         card-shadow
-        ${isZeroGravity ? 'floating-animation' : ''}
         group
         cursor-grab
         active:cursor-grabbing
         transition-all
-        duration-300
-        hover:scale-105
+        duration-200
+        ${isDragging ? 'cursor-grabbing shadow-2xl' : 'hover:shadow-lg'}
         ${glowClasses[glow]}
       `}
       style={{
